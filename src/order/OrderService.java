@@ -1,35 +1,62 @@
 package order;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class OrderService {
-    private final Map<Long, Order> orders = new ConcurrentHashMap<>();
-    private final Deque<Order> latest = new ConcurrentLinkedDeque<>();
+    private final Map<Long, Order> orders = new HashMap<>();
+    private final Deque<Order> latest = new LinkedList<>();
+    private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
 
     public List<Order> findAll() {
-        return new ArrayList<>(orders.values());
+        try {
+            lock.readLock().lock();
+            return new ArrayList<>(orders.values());
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     public List<Order> findLast100() {
-        return new ArrayList<>(latest);
+        try {
+            lock.readLock().lock();
+            return new ArrayList<>(latest);
+        } finally {
+            lock.readLock().unlock();
+        }
+
     }
 
     public Optional<Order> findById(Long id) {
-        return Optional.ofNullable(orders.get(id));
+        try {
+            lock.readLock().lock();
+            return Optional.ofNullable(orders.get(id));
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
 
     public void add(Order order) {
-        orders.put(order.getId(), order);
-        if (latest.size() == 100) latest.removeLast();
-        latest.add(order);
+        try {
+            lock.writeLock().lock();
+            orders.put(order.getId(), order);
+            if (latest.size() == 100) latest.removeLast();
+            latest.add(order);
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     public void remove(Order order) {
-        orders.remove(order.getId());
-        latest.remove(order);
+        try {
+            lock.writeLock().lock();
+            orders.remove(order.getId());
+            latest.remove(order);
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 }
