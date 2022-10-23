@@ -43,7 +43,7 @@ public class OrderService {
         try {
             lock.writeLock().lock();
             orders.put(order.getId(), order);
-            if (latest.size() == 100) latest.removeLast();
+            if (latest.size() == 100) latest.removeFirst();
             latest.add(order);
         } finally {
             lock.writeLock().unlock();
