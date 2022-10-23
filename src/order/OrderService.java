@@ -1,12 +1,13 @@
 package order;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class OrderService {
-    private  List<Order> orders;
+    private List<Order> orders = new ArrayList<>();
     private ReadWriteLock lock = new ReentrantReadWriteLock();
 
     public List<Order> findAll() {
