@@ -6,7 +6,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class OrderService {
-    private volatile List<Order> orders;
+    private  List<Order> orders;
     private ReadWriteLock lock = new ReentrantReadWriteLock();
 
     public List<Order> findAll() {
