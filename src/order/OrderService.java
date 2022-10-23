@@ -1,52 +1,35 @@
 package order;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 public class OrderService {
-    private volatile List<Order> orders;
-    private ReadWriteLock lock = new ReentrantReadWriteLock();
+    private final Map<Long, Order> orders = new ConcurrentHashMap<>();
+    private final Deque<Order> latest = new ConcurrentLinkedDeque<>();
+
 
     public List<Order> findAll() {
-        try {
-            lock.readLock().lock();
-            return orders;
-        } finally {
-            lock.readLock().unlock();
-        }
+        return new ArrayList<>(orders.values());
     }
 
     public List<Order> findLast100() {
-
-        try {
-            lock.readLock().lock();
-            return orders.stream()
-                    .sorted(Comparator.comparingLong(Order::getId))
-                    .limit(100)
-                    .toList();
-        } finally {
-            lock.readLock().unlock();
-        }
+        return new ArrayList<>(latest);
     }
 
-    public void add(Order order) {
-        try {
-            lock.readLock().lock();
-            orders.add(order);
-        } finally {
-            lock.readLock().unlock();
-        }
+    public Optional<Order> findById(Long id) {
+        return Optional.ofNullable(orders.get(id));
+    }
 
+
+    public void add(Order order) {
+        orders.put(order.getId(), order);
+        if (latest.size() == 100) latest.removeLast();
+        latest.add(order);
     }
 
     public void remove(Order order) {
-        try {
-            lock.readLock().lock();
-            orders.remove(order);
-        } finally {
-            lock.readLock().unlock();
-        }
+        orders.remove(order.getId());
+        latest.remove(order);
     }
 }
